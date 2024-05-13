@@ -98,7 +98,7 @@
    1. weekTable (引用星期表)
        > weekTable (weekTable) {.attribute}  # property
 
-   2. allocTable (引用待分配表)
+   2. allocList (引用待分配表)
        > allocTable (list[task]) {.attribute}  # property
 
    * method (方法)
@@ -116,6 +116,24 @@
          > accumFreeTime() {.method}
       
          * 遍历星期表，计算每日空闲时间,并求和
+
+### duration (时长封装)
+   > duration {.class}
+
+   1. seconds (秒)
+       > seconds (int) {.attribute}  # property
+
+   2. minutes (分)
+       > minutes (int) {.attribute}  # property
+
+   3. hours (时)
+       > hours (int) {.attribute}  # property
+      
+   * method (方法)
+      1. calcuTimeDuration (计算时长)
+         > calcuTimeDuration(seconds: int) {.method}
+         
+         * 将两个time类型的时间差转换为duration类型的时间差
          
 
 ## 3. Algorithm (算法)
