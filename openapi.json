@@ -1,0 +1,42 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "timeAllocWeb",
+    "description": "Use flask to create a web interface for time allocation.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "openapi",
+      "url": "https://openapi.apifox.cn/"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://{host}:{port}/{basepath}",
+      "description": "testing server",
+      "variables": {
+        "host": {
+          "enum": [
+            "localhost",
+            "127.0.0.1",
+            "0.0.0.0"
+          ],
+          "default": "localhost",
+          "description": "which host to run on"
+        },
+        "port": {
+          "enum": [
+            "5000",
+            "8080"
+          ],
+          "default": "5000"
+        },
+        "basepath": {
+          "default": "api"
+        }
+      }
+    }
+  ],
+  "paths": {
+
+  }
+}
