@@ -11,9 +11,9 @@
 # 传建时间: 2024/5/9 上午9:10
 # 当前项目名: pyAndWeb
 # 编码模式: utf-8
-# 注释: 
+# 注释: comment style is reStructuredText
 # -------------------------<edocsitahw>----------------------------
-from typing import Literal, final, overload
+from typing import Literal, final, overload, Self
 from datetime import time, datetime, timedelta
 from functools import cached_property, singledispatchmethod
 from abc import ABC, abstractmethod, abstractproperty
@@ -23,7 +23,7 @@ from atexit import register
 from time import time as now
 from debuger import debuger
 from inspect import currentframe
-
+from dataclasses import dataclass
 
 NOW = now()
 
@@ -32,6 +32,7 @@ NOW = now()
 def pargramEnd(): print(f"程序结束,运行时长: '{now() - NOW:.2f}'")
 
 
+@dataclass
 class duration:
     """
     封装了时长单位
@@ -53,6 +54,7 @@ class duration:
     Methods::
         :meth:`calcTimeDuration`: 计算两个时间差的时长
     """
+
     def __init__(self, *, seconds: int | float = None, minutes: int | float = None, hours: int | float = None):
         """
         初始化时长单位
@@ -79,6 +81,54 @@ class duration:
     @property
     def hours(self): return self._hours
 
+    def __add__(self, other: Self | int | float):
+        return duration(seconds=self.seconds + (other.seconds if isinstance(other, duration) else other))
+
+    def __radd__(self, other):
+        return self.__add__(other)
+
+    def __sub__(self, other: Self | int | float):
+        return duration(seconds=self.seconds - (other.seconds if isinstance(other, duration) else other))
+
+    def __rsub__(self, other):
+        return duration(seconds=(other.seconds if isinstance(other, duration) else other) - self.seconds)
+
+    def __mul__(self, other: int):
+        return duration(seconds=self.seconds * other)
+
+    def __rmul__(self, other: int):
+        return self.__mul__(other)
+
+    def __truediv__(self, other):
+        return duration(seconds=self.seconds / other)
+
+    def __rtruediv__(self, other):
+        return duration(seconds=other / self.seconds)
+
+    def __floordiv__(self, other):
+        return duration(seconds=self.seconds // other)
+
+    def __rfloordiv__(self, other):
+        return duration(seconds=other // self.seconds)
+
+    def __eq__(self, other):
+        return self.seconds == (other.seconds if isinstance(other, duration) else other)
+
+    def __lt__(self, other):
+        return self.seconds < (other.seconds if isinstance(other, duration) else other)
+
+    def __le__(self, other):
+        return self.seconds <= (other.seconds if isinstance(other, duration) else other)
+
+    def __gt__(self, other):
+        return self.seconds > (other.seconds if isinstance(other, duration) else other)
+
+    def __ge__(self, other):
+        return self.seconds >= (other.seconds if isinstance(other, duration) else other)
+
+    def __repr__(self):
+        return f"<duration: {self.seconds:_.4f}s>"
+
     @staticmethod
     @debuger('log', group="duration", note="计算时间差时出现异常!")
     def calcTimeDuration(start: time, end: time) -> 'duration':
@@ -92,7 +142,8 @@ class duration:
         :return: 时长对象
         :rtype: duration
         """
-        return duration(seconds=(datetime.combine(datetime.today(), end) - datetime.combine(datetime.today(), start)).total_seconds())
+        return duration(seconds=(datetime.combine(datetime.today(), end) - datetime.combine(datetime.today(),
+                                                                                            start)).total_seconds())
 
 
 WEEK_DAYS = ["Mon", "Tue", "Wen", "Thu", "Fri", "Sat", "Sun"]
@@ -108,7 +159,9 @@ class Task(ABC):
         :ivar _end: 结束时间
         :ivar _day: 星期
     """
-    def __init__(self, name: str, day: Literal["Mon", "Tue", "Wen", "Thu", "Fri", "Sat", "Sun"] = None, start: time = None, end: time = None):
+
+    def __init__(self, name: str, day: Literal["Mon", "Tue", "Wen", "Thu", "Fri", "Sat", "Sun"] | str = None,
+                 start: time = None, end: time = None):
         self.name = name
         self._start = start
         self._end = end
@@ -145,7 +198,8 @@ class Task(ABC):
 
     @final
     @property
-    def duration(self): return duration.calcTimeDuration(self.start, self.end)
+    def duration(self):
+        return duration.calcTimeDuration(self.start, self.end)
 
     @final
     @cached_property
@@ -160,7 +214,8 @@ class Task(ABC):
 
     @final
     def __repr__(self):
-        return f"<{self.name}[{self.type}]:" + ("auto" if self.type.lower() == "v" else f"{self.start.strftime('%H.%M')}-{self.end.strftime('%H.%M')}") + ">"
+        return f"<{self.name}[{self.type}]:" + (
+            "auto" if self.type.lower() == "v" else f"{self.start.strftime('%H.%M')}-{self.end.strftime('%H.%M')}") + ">"
 
 
 class varTask(Task):
@@ -193,7 +248,8 @@ class varTask(Task):
 
 
 class fixTask(Task):
-    def __init__(self, name: str, day: Literal["Mon", "Tue", "Wen", "Thu", "Fri", "Sat", "Sun"] | datetime, start: time = None, end: time = None):
+    def __init__(self, name: str, day: Literal["Mon", "Tue", "Wen", "Thu", "Fri", "Sat", "Sun"] | str,
+                 start: time = None, end: time = None):
         super().__init__(name, day, start, end)
 
     @cached_property
@@ -203,25 +259,53 @@ class fixTask(Task):
 
 class weekTable:
     def __init__(self, dayStart: time = None, dayEnd: time = None):
+        """
+        初始化一周的表格
+
+        :param dayStart: 一天的开始时间
+        :type dayStart: time
+        :param dayEnd: 一天的结束时间
+        :type dayEnd: time
+        """
         self._dayStart = dayStart if dayStart else time(7, 30)
         self._dayEnd = dayEnd if dayEnd else time(11, 30)
-        self._table = {k: {} for k in WEEK_DAYS}
+        self._table = {k: {"task": {}, "free": self.dayDuration} for k in WEEK_DAYS}
         self._allocList = []
 
     @property
-    def dayStart(self): return self._dayStart
+    def dayStart(self):
+        """每天的开始时间(作息)"""
+        return self._dayStart
 
     @property
-    def dayEnd(self): return self._dayEnd
+    def dayEnd(self):
+        """每天的结束时间(作息)"""
+        return self._dayEnd
 
     @property
-    def table(self): return self._table
+    def table(self):
+        """
+        一周的表格
+
+        tableFrame::
+            {
+                "星期": {
+                    "task": {
+                        "UUID": task
+                    },
+                    "free": duration
+                }
+            }
+        """
+        return self._table
 
     @property
-    def allocList(self): return self._allocList
+    def allocList(self):
+        return self._allocList
 
     @cached_property
-    def dayDuration(self): return duration.calcTimeDuration(self.dayStart, self.dayEnd)
+    def dayDuration(self):
+        return duration.calcTimeDuration(self.dayStart, self.dayEnd)
 
     @singledispatchmethod
     def addTask(self, _task: Task):
@@ -236,7 +320,9 @@ class weekTable:
                 f"任务时间超过一天!")
 
         else:
-            self.table[_task.day][_task.uuid] = _task
+            self.table[_task.day]["task"][_task.uuid] = _task  # type: ignore
+
+            self.table[_task.day]["free"] -= _task.duration  # type: ignore
 
     @addTask.register(varTask)
     @debuger('log', group="weekTable", note="添加可变任务时出现异常!")
@@ -247,7 +333,9 @@ class weekTable:
     def removeTask(self, _task: Task):
         if _task.type == "F":
             try:
-                del self.table[_task.day][_task.uuid]
+                del self.table[_task.day]["task"][_task.uuid]  # type: ignore
+
+                self.table[_task.day]["free"] += _task.duration  # type: ignore
             except KeyError:
                 warn(
                     f"移除任务失败,失败原因: 索引'{_task.uuid}'不存在!")
@@ -265,15 +353,24 @@ class allocation:
     def allocList(self): return self._allocList
 
     def allocate(self):
-        # TODO: 实现任务分配算法
-        pass
+        """
+        分配任务
+        """
+        for task in range(len(self.allocList)):
+            if self.allocList:
+                task = self.allocList.pop(0)
 
-    def accumFreeTime(self):
-        # TODO: 计算周内空闲时间
-        pass
+                # TODO: 解决在一天中寻找可以用的时间段的问题
+
+    def accumFreeTime(self) -> duration:
+        """计算周表的空闲时间"""
+        return sum(self.weekTable.table[k]["free"] for k in WEEK_DAYS)  # type: ignore
 
 
 if __name__ == '__main__':
-    a = allocation()
-    a.addTask("task1", weight=1.0)
-    print(a.dayTable)
+    # 测试代码
+    table = weekTable()
+    table.addTask(fixTask("first class", "Mon", time(8, 30), time(11, 50)))
+    table.addTask(varTask("finish homework", weight=0.6))
+    alloc = allocation(table)
+    print(alloc.accumFreeTime())
