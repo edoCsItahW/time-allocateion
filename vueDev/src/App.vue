@@ -77,8 +77,14 @@ export default {
             <div class="dayLabel" v-for="text in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']">{{ text }}</div>
         </div>
         <div class="botton-container">
-            <div class="add-botton" v-for="i in Array.from({length: 7}, (_, idx) => `${weekKey[idx]}`)" :week="i"
-                 @click="addTask">+
+            <div class="task-container">
+                <!-- TODO: 使用for将任务列表作为div元素进行渲染 -->
+            </div>
+            <div class="add-botton" @click="addTask">
+                <svg viewBox="0 0" height="45">
+                    <line x1="50%" y1="15%" x2="50%" y2="95%" stroke="black" stroke-width="5" stroke-linecap="round"></line>
+                    <line x1="40%" y1="50%" x2="60%" y2="50%" stroke="black" stroke-width="5" stroke-linecap="round"></line>
+                </svg>
             </div>
         </div>
     </div>
@@ -96,6 +102,10 @@ export default {
 </template>
 
 <style>
+body {
+    background-color: #1f2024;
+}
+
 .close-icon {
     float: right;
 }
@@ -168,7 +178,7 @@ export default {
 .day-serise {
     width: 100%;
     border-radius: 5px;
-    border: 2px solid #0075FBFF;
+    border: 2px solid #888888;
     margin: 2px;
 }
 
