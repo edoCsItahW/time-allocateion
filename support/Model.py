@@ -13,7 +13,7 @@
 # 编码模式: utf-8
 # 注释: comment style is reStructuredText
 # -------------------------<edocsitahw>----------------------------
-from typing import Literal, final, overload, Self
+from typing import Literal, final, overload, Self, Generic, LiteralString
 from datetime import time, datetime, timedelta
 from functools import cached_property, singledispatchmethod
 from abc import ABC, abstractmethod, abstractproperty
@@ -24,6 +24,7 @@ from time import time as now
 from debuger import debuger
 from inspect import currentframe
 from dataclasses import dataclass
+from collections import OrderedDict
 
 NOW = now()
 
@@ -269,7 +270,7 @@ class weekTable:
         """
         self._dayStart = dayStart if dayStart else time(7, 30)
         self._dayEnd = dayEnd if dayEnd else time(11, 30)
-        self._table = {k: {"task": {}, "free": self.dayDuration} for k in WEEK_DAYS}
+        self._table = {k: {"task": OrderedDict(), "free": self.dayDuration} for k in WEEK_DAYS}
         self._allocList = []
 
     @property

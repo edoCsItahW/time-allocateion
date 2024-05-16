@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
+    "jsPackage": "file://E:/codeSpace/codeSet/pyAndWeb/jsPackage",
     "vite": "^5.2.8",
     "vite-plugin-mock": "^3.0.2"
   }
